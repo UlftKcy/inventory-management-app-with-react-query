@@ -10,8 +10,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Box m={10}>
-        <AddStock />
-        <Stock />
+        <AddStock/>
+        <Stock/>
       </Box>
     </QueryClientProvider>
   );

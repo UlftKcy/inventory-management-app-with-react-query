@@ -23,10 +23,44 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
     const [code, setCode] = useState("");
     const [quantity, setQuantity] = useState("");
     const [unit, setUnit] = useState("");
-
     const toast = useToast();
-
     const queryClient = useQueryClient();
+
+    const createStock = (newStock) => {
+        axios.post(`https://63b519689f50390584c0823d.mockapi.io/inventory`, newStock);
+    };
+
+    const mutation = useMutation((newStock) => createStock(newStock), {
+        // When mutate is called:
+        onMutate: async (newStock) => {
+            await queryClient.cancelQueries(['stocks']);  //cancel any in-flight or pending query to the `stocks` key
+            const previousStock = queryClient.getQueryData(['stocks']); // retrieve the cached data 
+            queryClient.setQueryData('stocks', (old) => [...old, newStock]);
+            // return the previous list and the newTodo to be used later inside the context
+            return {
+                previousStock,
+                newStock
+            };
+        },
+        onSuccess: () => {
+            onClose();
+            toast({
+                title: 'Stock created.',
+                /* description: "We've created your account for you.", */
+                status: 'success',
+                duration: 5000,
+                isClosable: true,
+                position: 'top-right',
+            })
+        },
+        onError: (err, context) => {
+            queryClient.setQueryData('stocks', context.previousStock) //rollback the cache to the previous state
+        },
+        // Always refetch after error or success:
+        onSettled: () => {
+            queryClient.invalidateQueries('stocks'); //refetch the collection on the background
+        },
+    });
 
     const onCreateStock = (e) => {
         e.preventDefault();
@@ -34,52 +68,15 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
         const today = new Date(nowDate);
 
         const newStock = {
-            image: image,
+            "image": image,
             "name": name,
             "code": code,
             "quantity": quantity,
             "unit": unit,
             "createdAt": today.toLocaleDateString(),
         };
-        mutation.mutate(newStock, {
-            onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ['stocks'] });
-                onClose();
-                toast({
-                    title: 'Stock created.',
-                    /* description: "We've created your account for you.", */
-                    status: 'success',
-                    duration: 5000,
-                    isClosable: true,
-                    position: 'top-right',
-                })
-            },
-            onError: (response) => {
-                alert("An error occured while submiting the form");
-                console.log(response);
-            },
-        });
+        mutation.mutate(newStock);
     };
-
-    const createStock = (newStock) => {
-        axios.post(`https://63b519689f50390584c0823d.mockapi.io/inventory`, newStock);
-    };
-
-    const mutation = useMutation(createStock, {
-        // When mutate is called:
-        onMutate: async newStock => {
-            const previousStocks = queryClient.getQueryData('stocks');
-            queryClient.setQueryData('stocks', old => [...old, newStock])
-            return { previousStocks }
-        },
-        onError: (err, newStock, context) => {
-            queryClient.setQueryData('stocks', context.previousStocks)
-        },
-        // Always refetch after error or success:
-        onSettled: () => {
-            queryClient.invalidateQueries('stocks')
-        },
-    });
 
     return (
         <Drawer
