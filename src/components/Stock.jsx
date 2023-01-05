@@ -1,9 +1,13 @@
 import { Image, Table, TableContainer, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import axios from 'axios';
 import React from 'react';
 import { useQuery } from 'react-query';
 
 const Stock = () => {
-  const fetchStocks = () => fetch("https://63b519689f50390584c0823d.mockapi.io/inventory").then((res) => res.json());
+  const fetchStocks = async () => {
+    const res= await axios.get("https://63b519689f50390584c0823d.mockapi.io/inventory");
+    return res.data;
+  }
   const { status, error, data } = useQuery(
     {
       queryKey: ["stocks"],
