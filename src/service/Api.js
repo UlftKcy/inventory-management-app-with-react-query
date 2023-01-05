@@ -15,7 +15,7 @@ export const getStocks = async () => {
 
 export const addStock = async (stock) => {
     try {
-        const response = await stocksApi.post('/inventory',stock);
+        const response = await stocksApi.post('/inventory', stock);
         return response.data
     } catch (error) {
         throw new Error("Something is wrong!", { cause: error })

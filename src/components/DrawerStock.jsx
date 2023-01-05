@@ -39,9 +39,29 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
         onSuccess: async (data, variables, context) => {
             // invalidate cache and refetch
             await queryClient.invalidateQueries("stocks");
+            toast(
+                {
+                    title: "stock created",
+                    /* description: "We've created your account for you.", */
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                    position: 'top-right',
+                }
+            );
         },
         onError: async (error, variables, context) => {
             await queryClient.setQueryData('stocks', context.previousStock) //rollback the cache to the previous state
+            toast(
+                {
+                    title: "stock cannot be created",
+                    /* description: "We've created your account for you.", */
+                    status: 'error',
+                    duration: 5000,
+                    isClosable: true,
+                    position: 'top-right',
+                }
+            );
         },
         // Always refetch after error or success:
         onSettled: async (data, error, variables, context) => {
@@ -64,28 +84,13 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
         try {
             await addStockMutation.mutateAsync(newStock)
             onClose();
-            /*  setImage("");
-             setName("");
-             setCode("");
-             setQuantity("");
-             setUnit(""); */
-            toast({
-                title: 'Stock created.',
-                /* description: "We've created your account for you.", */
-                status: 'success',
-                duration: 5000,
-                isClosable: true,
-                position: 'top-right',
-            })
+            setImage("");
+            setName("");
+            setCode("");
+            setQuantity("");
+            setUnit("");
         } catch (error) {
-            toast({
-                title: 'Stock cannot be created.',
-                /* description: "We've created your account for you.", */
-                status: 'error',
-                duration: 5000,
-                isClosable: true,
-                position: 'top-right',
-            })
+            throw new Error("Something is wrong!", { cause: error })
         }
     }
     return (
