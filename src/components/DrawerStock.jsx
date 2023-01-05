@@ -13,9 +13,9 @@ import {
     useToast,
     VStack,
 } from "@chakra-ui/react";
-import axios from "axios";
 import React, { useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
+import { addStock } from "../service/Api";
 
 const DrawerStock = ({ isOpen, onClose, btnRef }) => {
     const [image, setImage] = useState("");
@@ -26,47 +26,33 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
     const toast = useToast();
     const queryClient = useQueryClient();
 
-    const createStock = (newStock) => {
-        axios.post(`https://63b519689f50390584c0823d.mockapi.io/inventory`, newStock);
-    };
-
-    const mutation = useMutation((newStock) => createStock(newStock), {
+    const addStockMutation = useMutation(addStock, {
         // When mutate is called:
         onMutate: async (newStock) => {
             await queryClient.cancelQueries(['stocks']);  //cancel any in-flight or pending query to the `stocks` key
             const previousStock = queryClient.getQueryData(['stocks']); // retrieve the cached data 
-            queryClient.setQueryData('stocks', (old) => [...old, newStock]);
-            // return the previous list and the newTodo to be used later inside the context
             return {
                 previousStock,
                 newStock
             };
         },
-        onSuccess: () => {
-            onClose();
-            toast({
-                title: 'Stock created.',
-                /* description: "We've created your account for you.", */
-                status: 'success',
-                duration: 5000,
-                isClosable: true,
-                position: 'top-right',
-            })
+        onSuccess: async (data, variables, context) => {
+            // invalidate cache and refetch
+            await queryClient.invalidateQueries("stocks");
         },
-        onError: (err, context) => {
-            queryClient.setQueryData('stocks', context.previousStock) //rollback the cache to the previous state
+        onError: async (error, variables, context) => {
+            await queryClient.setQueryData('stocks', context.previousStock) //rollback the cache to the previous state
         },
         // Always refetch after error or success:
-        onSettled: () => {
-            queryClient.invalidateQueries('stocks'); //refetch the collection on the background
+        onSettled: async (data, error, variables, context) => {
+            await queryClient.invalidateQueries('stocks'); //refetch the collection on the background
         },
     });
 
-    const onCreateStock = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         const nowDate = Date.now();
         const today = new Date(nowDate);
-
         const newStock = {
             "image": image,
             "name": name,
@@ -75,9 +61,33 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
             "unit": unit,
             "createdAt": today.toLocaleDateString(),
         };
-        mutation.mutate(newStock);
-    };
-
+        try {
+            await addStockMutation.mutateAsync(newStock)
+            onClose();
+            /*  setImage("");
+             setName("");
+             setCode("");
+             setQuantity("");
+             setUnit(""); */
+            toast({
+                title: 'Stock created.',
+                /* description: "We've created your account for you.", */
+                status: 'success',
+                duration: 5000,
+                isClosable: true,
+                position: 'top-right',
+            })
+        } catch (error) {
+            toast({
+                title: 'Stock cannot be created.',
+                /* description: "We've created your account for you.", */
+                status: 'error',
+                duration: 5000,
+                isClosable: true,
+                position: 'top-right',
+            })
+        }
+    }
     return (
         <Drawer
             isOpen={isOpen}
@@ -87,7 +97,7 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
             size="lg"
         >
             <DrawerOverlay />
-            <form onSubmit={onCreateStock}>
+            <form onSubmit={handleSubmit}>
                 <DrawerContent>
                     <DrawerCloseButton />
                     <DrawerHeader>Create New Stock</DrawerHeader>
