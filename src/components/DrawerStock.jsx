@@ -13,7 +13,7 @@ import {
     useToast,
     VStack,
 } from "@chakra-ui/react";
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
 import { addStock } from "../service/Api";
 
@@ -46,7 +46,7 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
                     status: 'success',
                     duration: 5000,
                     isClosable: true,
-                    position: 'top-right',
+                    position: 'bottom-right',
                 }
             );
         },
@@ -59,7 +59,7 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
                     status: 'error',
                     duration: 5000,
                     isClosable: true,
-                    position: 'top-right',
+                    position: 'bottom-right',
                 }
             );
         },
@@ -180,4 +180,4 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
     );
 };
 
-export default DrawerStock;
+export default memo(DrawerStock);

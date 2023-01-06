@@ -1,9 +1,13 @@
-import { Image, Table, TableContainer, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
-import React from 'react';
+import { Button, Image, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure } from '@chakra-ui/react';
+import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { getStocks } from '../service/Api';
+import DrawerStockDetail from './DrawerStockDetail';
 
 const Stock = () => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [selectedStockId, setSelectedStockId] = useState(null);
+
   const { status, error, data } = useQuery(
     {
       queryKey: ["stocks"],
@@ -19,6 +23,11 @@ const Stock = () => {
     return <span>Error: {error.message}</span>
   }
 
+  const handleRowClick = (stockId) => {
+    onOpen();
+    setSelectedStockId(stockId)
+  }
+
 
   return (
     <TableContainer border="1px" borderColor="gray.300" rounded="lg" p={5}>
@@ -30,6 +39,7 @@ const Stock = () => {
             <Th>Stock Code</Th>
             <Th>Quantity</Th>
             <Th>unit</Th>
+            <Th></Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -46,10 +56,14 @@ const Stock = () => {
               <Td>{stock.code}</Td>
               <Td>{stock.quantity}</Td>
               <Td>{stock.unit}</Td>
+              <Td>
+                <Button colorScheme="blue" variant="outline" size="sm" onClick={() => handleRowClick(stock.id)}>Show Detail</Button>
+              </Td>
             </Tr>
           )))}
         </Tbody>
       </Table>
+      <DrawerStockDetail isOpen={isOpen} onClose={onClose} selectedStockId={selectedStockId} />
     </TableContainer>
   )
 }
