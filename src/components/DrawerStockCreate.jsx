@@ -17,7 +17,7 @@ import React, { memo, useState } from "react";
 import { useMutation, useQueryClient } from "react-query";
 import { addStock } from "../service/Api";
 
-const DrawerStock = ({ isOpen, onClose, btnRef }) => {
+const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
     const [image, setImage] = useState("");
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
@@ -29,43 +29,38 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
     const addStockMutation = useMutation(addStock, {
         // When mutate is called:
         onMutate: async (newStock) => {
-            await queryClient.cancelQueries(['stocks']);  //cancel any in-flight or pending query to the `stocks` key
-            const previousStock = queryClient.getQueryData(['stocks']); // retrieve the cached data 
+            await queryClient.cancelQueries(["stocks"]); //cancel any in-flight or pending query to the `stocks` key
+            const previousStock = queryClient.getQueryData(["stocks"]); // retrieve the cached data
             return {
                 previousStock,
-                newStock
+                newStock,
             };
         },
         onSuccess: async (data, variables, context) => {
             // invalidate cache and refetch
-            await queryClient.invalidateQueries("stocks");
-            toast(
-                {
-                    title: "stock created",
-                    /* description: "We've created your account for you.", */
-                    status: 'success',
-                    duration: 5000,
-                    isClosable: true,
-                    position: 'bottom-right',
-                }
-            );
+            toast({
+                title: "stock created",
+                /* description: "We've created your account for you.", */
+                status: "success",
+                duration: 5000,
+                isClosable: true,
+                position: "top-right",
+            });
         },
         onError: async (error, variables, context) => {
-            await queryClient.setQueryData('stocks', context.previousStock) //rollback the cache to the previous state
-            toast(
-                {
-                    title: "stock cannot be created",
-                    /* description: "We've created your account for you.", */
-                    status: 'error',
-                    duration: 5000,
-                    isClosable: true,
-                    position: 'bottom-right',
-                }
-            );
+            await queryClient.setQueryData("stocks", context.previousStock); //rollback the cache to the previous state
+            toast({
+                title: "stock cannot be created",
+                /* description: "We've created your account for you.", */
+                status: "error",
+                duration: 5000,
+                isClosable: true,
+                position: "top-right",
+            });
         },
         // Always refetch after error or success:
         onSettled: async (data, error, variables, context) => {
-            await queryClient.invalidateQueries('stocks'); //refetch the collection on the background
+            await queryClient.invalidateQueries("stocks"); //refetch the collection on the background
         },
     });
 
@@ -74,15 +69,15 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
         const nowDate = Date.now();
         const today = new Date(nowDate);
         const newStock = {
-            "image": image,
-            "name": name,
-            "code": code,
-            "quantity": quantity,
-            "unit": unit,
-            "createdAt": today.toLocaleDateString(),
+            image: image,
+            name: name,
+            code: code,
+            quantity: quantity,
+            unit: unit,
+            createdAt: today.toLocaleDateString(),
         };
         try {
-            await addStockMutation.mutateAsync(newStock)
+            await addStockMutation.mutateAsync(newStock);
             onClose();
             setImage("");
             setName("");
@@ -90,9 +85,9 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
             setQuantity("");
             setUnit("");
         } catch (error) {
-            throw new Error("Something is wrong!", { cause: error })
+            throw new Error("Something is wrong!", { cause: error });
         }
-    }
+    };
     return (
         <Drawer
             isOpen={isOpen}
@@ -107,7 +102,6 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
                     <DrawerCloseButton />
                     <DrawerHeader>Create New Stock</DrawerHeader>
                     <DrawerBody>
-
                         <VStack spacing={15}>
                             <FormControl>
                                 <FormLabel fontSize="sm" color="blackAlpha.700">
@@ -180,4 +174,4 @@ const DrawerStock = ({ isOpen, onClose, btnRef }) => {
     );
 };
 
-export default memo(DrawerStock);
+export default memo(DrawerStockCreate);

@@ -21,3 +21,21 @@ export const addStock = async (stock) => {
         throw new Error("Something is wrong!", { cause: error })
     }
 }
+
+export const updateStock = async (stock) => {
+    try {
+        const response = await stocksApi.put(`/inventory/${stock.id}`, stock);
+        return response.data
+    } catch (error) {
+        throw new Error("Something is wrong!", { cause: error })
+    }
+}
+
+export const deleteStock = async (id) => {
+    try {
+        const response = await stocksApi.delete(`/inventory/${id}`, id);
+        return response.data
+    } catch (error) {
+        throw new Error("Something is wrong!", { cause: error })
+    }
+}
