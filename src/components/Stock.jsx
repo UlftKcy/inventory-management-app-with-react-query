@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { getStocks } from '../service/Api';
 import DrawerStockDetail from './DrawerStockDetail';
+import Loading from './Loading';
 
 const Stock = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -16,7 +17,7 @@ const Stock = () => {
   );
 
   if (status === 'loading') {
-    return <span>Loading...</span>
+    return <Loading/>
   }
 
   if (status === 'error') {
