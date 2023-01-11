@@ -164,8 +164,8 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
                     <DrawerFooter display="flex" justifyContent="flex-start">
                         <Button type="submit"
                             colorScheme="teal"
-                            isLoading
-                            loadingText='Saving'
+                          /*   isLoading
+                            loadingText='Saving' */
                             mr={3}
                         >
                             Save
