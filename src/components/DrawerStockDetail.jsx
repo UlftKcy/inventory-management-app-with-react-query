@@ -40,7 +40,9 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
 
     const updateMutation = useMutation({
         mutationFn: updateStock,
-        onSuccess: () => {
+        onSuccess: (updateStock) => {
+            //  use to immediately update a query's cached data
+            queryClient.setQueryData(['stocks', { id: updateStock.id }], updateStock)
             toast(
                 {
                     title: "stock updated",

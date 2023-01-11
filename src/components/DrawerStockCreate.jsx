@@ -37,7 +37,8 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
             };
         },
         onSuccess: async (data, variables, context) => {
-            // invalidate cache and refetch
+            //  use to immediately update a query's cached data
+            queryClient.setQueryData(['stocks', { id: context.newStock.id }], context.newStock)
             toast({
                 title: "stock created",
                 /* description: "We've created your account for you.", */
@@ -69,12 +70,12 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
         const nowDate = Date.now();
         const today = new Date(nowDate);
         const newStock = {
-            image: image,
-            name: name,
-            code: code,
-            quantity: quantity,
-            unit: unit,
-            createdAt: today.toLocaleDateString(),
+            "image": image,
+            "name": name,
+            "code": code,
+            "quantity": quantity,
+            "unit": unit,
+            "createdAt": today.toLocaleDateString(),
         };
         try {
             await addStockMutation.mutateAsync(newStock);
@@ -161,7 +162,12 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
                         </VStack>
                     </DrawerBody>
                     <DrawerFooter display="flex" justifyContent="flex-start">
-                        <Button type="submit" colorScheme="teal" mr={3}>
+                        <Button type="submit"
+                            colorScheme="teal"
+                            isLoading
+                            loadingText='Saving'
+                            mr={3}
+                        >
                             Save
                         </Button>
                         <Button type="button" variant="outline" onClick={onClose}>

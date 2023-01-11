@@ -1,5 +1,5 @@
 import { Button } from "@chakra-ui/react";
-import React from "react";
+import React, { memo } from "react";
 
 const PaginationNumbers = ({ paginationNumber, pageNumber,setPageNumber }) => {
 
@@ -8,9 +8,9 @@ const PaginationNumbers = ({ paginationNumber, pageNumber,setPageNumber }) => {
         paginationPageNumbers.push(i);
     }
 
-    return paginationPageNumbers.map((paginationPageNumber) => (
-        <Button onClick={() => setPageNumber(paginationPageNumber)} color={pageNumber === paginationPageNumber ? "gray.800" : "gray.400"}>{paginationPageNumber}</Button>
-    ));
+    return React.Children.toArray(paginationPageNumbers.map((paginationPageNumber) => (
+        <Button _hover={{ bg:"gray.300" }} onClick={() => setPageNumber(paginationPageNumber)} color={pageNumber === paginationPageNumber ? "gray.800" : "gray.400"}>{paginationPageNumber}</Button>
+    )));
 };
 
-export default PaginationNumbers;
+export default memo(PaginationNumbers);
