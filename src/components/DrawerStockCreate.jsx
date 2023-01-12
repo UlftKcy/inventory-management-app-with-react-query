@@ -10,81 +10,40 @@ import {
     FormControl,
     FormLabel,
     Input,
-    useToast,
     VStack,
 } from "@chakra-ui/react";
-import React, { memo, useState } from "react";
-import { useMutation, useQueryClient } from "react-query";
-import { addStock } from "../service/Api";
+import React, { memo, useReducer } from "react";
+import Mutation from "../utils/mutation";
 
 const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
-    const [image, setImage] = useState("");
-    const [name, setName] = useState("");
-    const [code, setCode] = useState("");
-    const [quantity, setQuantity] = useState("");
-    const [unit, setUnit] = useState("");
-    const toast = useToast();
-    const queryClient = useQueryClient();
-
-    const addStockMutation = useMutation(addStock, {
-        // When mutate is called:
-        onMutate: async (newStock) => {
-            await queryClient.cancelQueries(["stocks"]); //cancel any in-flight or pending query to the `stocks` key
-            const previousStock = queryClient.getQueryData(["stocks"]); // retrieve the cached data
-            return {
-                previousStock,
-                newStock,
-            };
-        },
-        onSuccess: async (data, variables, context) => {
-            //  use to immediately update a query's cached data
-            queryClient.setQueryData(['stocks', { id: context.newStock.id }], context.newStock)
-            toast({
-                title: "stock created",
-                /* description: "We've created your account for you.", */
-                status: "success",
-                duration: 5000,
-                isClosable: true,
-                position: "top-right",
-            });
-        },
-        onError: async (error, variables, context) => {
-            await queryClient.setQueryData("stocks", context.previousStock); //rollback the cache to the previous state
-            toast({
-                title: "stock cannot be created",
-                /* description: "We've created your account for you.", */
-                status: "error",
-                duration: 5000,
-                isClosable: true,
-                position: "top-right",
-            });
-        },
-        // Always refetch after error or success:
-        onSettled: async (data, error, variables, context) => {
-            await queryClient.invalidateQueries("stocks"); //refetch the collection on the background
-        },
+    const [stock, createStock] = useReducer((prev, next) => {
+        return { ...prev, ...next }
+    }, {
+        image: "", name: "", code: "", quantity: null, unit: ""
     });
+
+    const { addStockMutation } = Mutation();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         const nowDate = Date.now();
         const today = new Date(nowDate);
         const newStock = {
-            "image": image,
-            "name": name,
-            "code": code,
-            "quantity": quantity,
-            "unit": unit,
+            "image": stock.image,
+            "name": stock.name,
+            "code": stock.code,
+            "quantity": stock.quantity,
+            "unit": stock.unit,
             "createdAt": today.toLocaleDateString(),
         };
         try {
             await addStockMutation.mutateAsync(newStock);
             onClose();
-            setImage("");
-            setName("");
-            setCode("");
-            setQuantity("");
-            setUnit("");
+            createStock({ image: "" });
+            createStock({ name: "" });
+            createStock({ code: "" });
+            createStock({ quantity: "" });
+            createStock({ unit: "" });
         } catch (error) {
             throw new Error("Something is wrong!", { cause: error });
         }
@@ -109,8 +68,7 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
                                     Stock Image URL
                                 </FormLabel>
                                 <Input
-                                    value={image}
-                                    onChange={(e) => setImage(e.target.value)}
+                                    onChange={(e) => createStock({ image: e.target.value })}
                                     type="text"
                                     placeholder="Stock image url"
                                 />
@@ -120,8 +78,7 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
                                     Stock Name
                                 </FormLabel>
                                 <Input
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
+                                    onChange={(e) => createStock({ name: e.target.value })}
                                     type="text"
                                     placeholder="Stock name"
                                 />
@@ -131,8 +88,7 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
                                     Stock Code
                                 </FormLabel>
                                 <Input
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value)}
+                                    onChange={(e) => createStock({ code: e.target.value })}
                                     type="text"
                                     placeholder="Stock code"
                                 />
@@ -142,8 +98,7 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
                                     Quantity
                                 </FormLabel>
                                 <Input
-                                    value={quantity}
-                                    onChange={(e) => setQuantity(e.target.value)}
+                                    onChange={(e) => createStock({ quantity: e.target.value })}
                                     type="number"
                                     placeholder="Quantity"
                                 />
@@ -153,8 +108,7 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
                                     Unit
                                 </FormLabel>
                                 <Input
-                                    value={unit}
-                                    onChange={(e) => setUnit(e.target.value)}
+                                    onChange={(e) => createStock({ unit: e.target.value })}
                                     type="text"
                                     placeholder="Unit"
                                 />
@@ -164,8 +118,8 @@ const DrawerStockCreate = ({ isOpen, onClose, btnRef }) => {
                     <DrawerFooter display="flex" justifyContent="flex-start">
                         <Button type="submit"
                             colorScheme="teal"
-                          /*   isLoading
-                            loadingText='Saving' */
+                            isLoading={addStockMutation.isLoading}
+                            loadingText='Creating'
                             mr={3}
                         >
                             Save

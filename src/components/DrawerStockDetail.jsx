@@ -14,95 +14,31 @@ import {
     useToast,
     VStack,
 } from "@chakra-ui/react";
-import React, { memo, useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "react-query";
-import { deleteStock, updateStock } from "../service/Api";
+import React, { memo, useEffect, useReducer } from "react";
+import { useQueryClient } from "react-query";
+import Mutation from "../utils/mutation";
 
 
 const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
-    const queryClient = useQueryClient();
-    const selectedStock = queryClient.getQueryData('stocks').find(stock => stock?.id === selectedStockId);
-    const [image, setImage] = useState("");
-    const [name, setName] = useState("");
-    const [code, setCode] = useState("");
-    const [quantity, setQuantity] = useState("");
-    const [unit, setUnit] = useState("");
-    const toast = useToast();
-
-    useEffect(() => {
-        setImage(selectedStock?.image);
-        setName(selectedStock?.name);
-        setCode(selectedStock?.code);
-        setQuantity(selectedStock?.quantity);
-        setUnit(selectedStock?.unit);
-    }, [selectedStock]);
-
-
-    const updateMutation = useMutation({
-        mutationFn: updateStock,
-        onSuccess: (updateStock) => {
-            //  use to immediately update a query's cached data
-            queryClient.setQueryData(['stocks', { id: updateStock.id }], updateStock)
-            toast(
-                {
-                    title: "stock updated",
-                    /* description: "We've created your account for you.", */
-                    status: 'info',
-                    duration: 5000,
-                    isClosable: true,
-                    position: 'top-right',
-                }
-            )
-        },
-        onError: async (error, variables, context) => {
-            toast(
-                {
-                    title: "stock cannot be updated",
-                    /* description: "We've created your account for you.", */
-                    status: 'error',
-                    duration: 5000,
-                    isClosable: true,
-                    position: 'top-right',
-                }
-            );
-        },
-        // Always refetch after error or success:
-        onSettled: async (data, error, variables, context) => {
-            await queryClient.invalidateQueries('stocks'); //refetch the collection on the background
-        },
+    // const [state, dispatch] = useReducer(reducer, initialArg, init?)
+    const [stock, updatedStock] = useReducer((prev, next) => {
+        return { ...prev, ...next }
+    }, {
+        image: "", name: "", code: "", quantity: null, unit: ""
     });
 
-    const deleteMutation = useMutation({
-        mutationFn: deleteStock,
-        onSuccess: () => {
-            toast(
-                {
-                    title: "stock deleted",
-                    /* description: "We've created your account for you.", */
-                    status: 'success',
-                    duration: 5000,
-                    isClosable: true,
-                    position: 'top-right',
-                }
-            )
-        },
-        onError: async (error, variables, context) => {
-            toast(
-                {
-                    title: "stock cannot be deleted",
-                    /* description: "We've created your account for you.", */
-                    status: 'error',
-                    duration: 5000,
-                    isClosable: true,
-                    position: 'top-right',
-                }
-            );
-        },
-        // Always refetch after error or success:
-        onSettled: async (data, error, variables, context) => {
-            await queryClient.invalidateQueries('stocks'); //refetch the collection on the background
-        },
-    })
+    const queryClient = useQueryClient();
+    const selectedStock = queryClient.getQueryData('stocks').find(stock => stock?.id === selectedStockId);
+
+    useEffect(() => {
+        updatedStock({ image: selectedStock?.image });
+        updatedStock({ name: selectedStock?.name });
+        updatedStock({ code: selectedStock?.code });
+        updatedStock({ quantity: selectedStock?.quantity });
+        updatedStock({ unit: selectedStock?.unit });
+    }, [selectedStock]);
+
+    const { updateMutation, deleteMutation } = Mutation();
 
     const handleUpdate = async (e) => {
         e.preventDefault();
@@ -110,26 +46,25 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
         const today = new Date(nowDate);
         const updateStock = {
             "id": selectedStock?.id,
-            "image": image,
-            "name": name,
-            "code": code,
-            "quantity": quantity,
-            "unit": unit,
+            "image": stock.image,
+            "name": stock.name,
+            "code": stock.code,
+            "quantity": stock.quantity,
+            "unit": stock.unit,
             "createdAt": today.toLocaleDateString(),
         };
         try {
             await updateMutation.mutateAsync(updateStock)
             onClose();
-            setImage("");
-            setName("");
-            setCode("");
-            setQuantity("");
-            setUnit("");
+            updatedStock({ image: "" });
+            updatedStock({ name: "" });
+            updatedStock({ code: "" });
+            updatedStock({ quantity: "" });
+            updatedStock({ unit: "" });
         } catch (error) {
             throw new Error("Something is wrong!", { cause: error })
         }
-
-    }
+    };
 
     const handleDelete = async (id) => {
         try {
@@ -154,7 +89,7 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
                     <DrawerBody>
                         <VStack spacing={15}>
                             <Image
-                                src={image !== "" ? image : "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/681px-Placeholder_view_vector.svg.png"}
+                                src={stock.image !== "" ? stock.image : "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/681px-Placeholder_view_vector.svg.png"}
                                 alt="Green double couch with wooden legs"
                                 borderRadius="lg"
                                 objectFit='contain'
@@ -167,8 +102,8 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
                                     Stock Image URL
                                 </FormLabel>
                                 <Input
-                                    value={image || ''}
-                                    onChange={(e) => setImage(e.target.value)}
+                                    value={stock.image || ''}
+                                    onChange={(e) => updatedStock({ image: e.target.value })}
                                     type="text"
                                     placeholder="Stock image url"
                                 />
@@ -178,8 +113,8 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
                                     Stock Name
                                 </FormLabel>
                                 <Input
-                                    value={name || ''}
-                                    onChange={(e) => setName(e.target.value)}
+                                    value={stock.name || ''}
+                                    onChange={(e) => updatedStock({ name: e.target.value })}
                                     type="text"
                                     placeholder="Stock name"
                                 />
@@ -189,8 +124,8 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
                                     Stock Code
                                 </FormLabel>
                                 <Input
-                                    value={code || ''}
-                                    onChange={(e) => setCode(e.target.value)}
+                                    value={stock.code || ''}
+                                    onChange={(e) => updatedStock({ code: e.target.value })}
                                     type="text"
                                     placeholder="Stock code"
                                 />
@@ -200,8 +135,8 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
                                     Quantity
                                 </FormLabel>
                                 <Input
-                                    value={quantity || ''}
-                                    onChange={(e) => setQuantity(e.target.value)}
+                                    value={stock.quantity || ''}
+                                    onChange={(e) => updatedStock({ quantity: e.target.value })}
                                     type="number"
                                     placeholder="Quantity"
                                 />
@@ -211,8 +146,8 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
                                     Unit
                                 </FormLabel>
                                 <Input
-                                    value={unit || ''}
-                                    onChange={(e) => setUnit(e.target.value)}
+                                    value={stock.unit || ''}
+                                    onChange={(e) => updatedStock({ unit: e.target.value })}
                                     type="text"
                                     placeholder="Unit"
                                 />
@@ -220,10 +155,12 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
                         </VStack>
                     </DrawerBody>
                     <DrawerFooter justifyContent="flex-start">
-                        <Button onClick={() => handleDelete(selectedStock?.id)} variant="outline" colorScheme="red" mr={3}>
+                        <Button isLoading={deleteMutation.isLoading}
+                            loadingText='Deleting' onClick={() => handleDelete(selectedStock?.id)} variant="outline" colorScheme="red" mr={3}>
                             Delete
                         </Button>
-                        <Button type="submit" colorScheme="green">
+                        <Button isLoading={updateMutation.isLoading}
+                            loadingText='Updating' type="submit" colorScheme="green">
                             Update
                         </Button>
                     </DrawerFooter>
