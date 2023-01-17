@@ -1,5 +1,6 @@
 import { Button, ButtonGroup, Highlight, Image, Stack, Table, TableContainer, Tbody, Td, Th, Thead, Tr, useDisclosure, Icon } from '@chakra-ui/react';
 import React, { useState } from 'react';
+import placeholder from "../assets/images/placeholder.png";
 import { useQuery } from 'react-query';
 import { getStocks } from '../service/Api';
 import DrawerStockDetail from './DrawerStockDetail';
@@ -11,6 +12,7 @@ const Stock = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [selectedStockId, setSelectedStockId] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const { status, error, data } = useQuery(
     {
@@ -32,7 +34,6 @@ const Stock = () => {
     setSelectedStockId(stockId)
   };
 
-  const pageSize = 20;
   const pageShowData = pageSize * pageNumber;
   const pageData = data.slice((pageShowData - pageSize), pageShowData);
   const paginationNumber = Math.ceil(data.length / pageSize);
@@ -70,8 +71,9 @@ const Stock = () => {
                     <Image
                       objectFit='cover'
                       maxW='30px' maxH='30px'
-                      src={stock.image !== "" ? stock.image : "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/681px-Placeholder_view_vector.svg.png"}
+                      src={stock.image}
                       alt={stock.name}
+                      fallbackSrc={placeholder}
                     /></Td>
                   <Td>{stock.name}</Td>
                   <Td>{stock.code}</Td>

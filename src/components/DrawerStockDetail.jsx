@@ -14,6 +14,7 @@ import {
     useToast,
     VStack,
 } from "@chakra-ui/react";
+import placeholder from "../assets/images/placeholder.png";
 import React, { memo, useEffect, useReducer } from "react";
 import { useQueryClient } from "react-query";
 import Mutation from "../utils/mutation";
@@ -89,11 +90,13 @@ const DrawerStockDetail = ({ isOpen, onClose, selectedStockId }) => {
                     <DrawerBody>
                         <VStack spacing={15}>
                             <Image
-                                src={stock.image !== "" ? stock.image : "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Placeholder_view_vector.svg/681px-Placeholder_view_vector.svg.png"}
+                                src={stock.image}
+                                fallbackSrc={placeholder}
                                 alt="Green double couch with wooden legs"
                                 borderRadius="lg"
                                 objectFit='contain'
-                                h="100px"
+                                w="150px"
+                                h="150px"
                                 m="auto"
                                 py={2}
                             />
